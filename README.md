@@ -2,6 +2,9 @@
 
 > **Private / internal.** This repository is Nerumi IP and must remain private.
 
+> 📊 **Prefer the visual version?** Open **[`docs/visual-guide.html`](docs/visual-guide.html)** in any
+> browser — a one-page, plain-language walkthrough of the whole project (works offline, no setup).
+
 ## What Tradewind is
 
 Home-services businesses (plumbers, landscapers, fencing companies) run on **Jobber** — a CRM whose

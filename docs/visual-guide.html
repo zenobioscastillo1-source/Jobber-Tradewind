@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tradewind — Visual Guide</title>
+<meta name="description" content="A plain-language visual guide to Tradewind: an AI assistant layer on top of Jobber.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d9488'/%3E%3Cpath d='M6 12h13a4 4 0 1 0-4-4M6 20h17a4 4 0 1 1-4 4M6 16h9' stroke='white' stroke-width='2.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  /* ---- Design tokens (semantic) ------------------------------------------ */
+  :root{
+    --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem;
+    --space-6:1.5rem; --space-8:2rem; --space-12:3rem; --space-16:4rem;
+    --radius:16px; --radius-sm:10px; --radius-pill:999px;
+
+    --bg:#eef2f6; --surface:#ffffff; --surface-2:#f1f5f9; --surface-3:#e9eef3;
+    --ink:#0f172a; --ink-2:#334155; --muted:#64748b; --border:#dbe3ec;
+
+    --primary:#0d9488; --primary-strong:#0f766e; --primary-ink:#ffffff;
+    --primary-soft:#e6f4f2;
+    --built:#15803d; --built-soft:#e8f5ec;
+    --planned:#b45309; --planned-soft:#fbf0e0;
+    --escalate:#b91c1c; --escalate-soft:#fbeaea;
+    --grounded:#15803d; --grounded-soft:#e8f5ec;
+
+    --shadow-sm:0 1px 2px rgba(15,23,42,.06);
+    --shadow:0 6px 24px -8px rgba(15,23,42,.18);
+    --shadow-lg:0 18px 48px -16px rgba(15,23,42,.28);
+
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --maxw:1080px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0b1220; --surface:#121b2b; --surface-2:#16213400; --surface-2:#172234;
+      --surface-3:#1d2a40; --ink:#eef2f7; --ink-2:#c4d0de; --muted:#8d9cb0;
+      --border:#26344b;
+      --primary:#2dd4bf; --primary-strong:#5eead4; --primary-ink:#04201c;
+      --primary-soft:#11302c;
+      --built:#4ade80; --built-soft:#10291b;
+      --planned:#fbbf66; --planned-soft:#2e2310;
+      --escalate:#f87171; --escalate-soft:#2c1717;
+      --grounded:#4ade80; --grounded-soft:#10291b;
+      --shadow:0 6px 24px -8px rgba(0,0,0,.5);
+      --shadow-lg:0 18px 48px -16px rgba(0,0,0,.6);
+    }
+  }
+
+  /* ---- Base -------------------------------------------------------------- */
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important;animation:none!important} }
+  body{
+    margin:0; font-family:var(--font); color:var(--ink); background:var(--bg);
+    line-height:1.6; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+  .wrap{max-width:var(--maxw); margin-inline:auto; padding-inline:clamp(1rem,4vw,2rem)}
+  h1,h2,h3{line-height:1.15; margin:0; letter-spacing:-.02em}
+  p{margin:0}
+  a{color:var(--primary-strong); text-decoration:none}
+  a:hover{text-decoration:underline}
+  :focus-visible{outline:3px solid var(--primary); outline-offset:2px; border-radius:6px}
+
+  .eyebrow{font-size:.78rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--primary-strong)}
+  .lede{font-size:clamp(1.05rem,2.2vw,1.2rem); color:var(--ink-2)}
+  .muted{color:var(--muted)}
+
+  /* ---- Top bar ----------------------------------------------------------- */
+  .topbar{position:sticky; top:0; z-index:10; backdrop-filter:blur(8px);
+    background:color-mix(in srgb, var(--bg) 82%, transparent); border-bottom:1px solid var(--border)}
+  .topbar .wrap{display:flex; align-items:center; gap:var(--space-4); min-height:60px}
+  .brand{display:flex; align-items:center; gap:.6rem; font-weight:800; letter-spacing:-.02em}
+  .brand svg{display:block}
+  .navlinks{margin-left:auto; display:flex; gap:.35rem; flex-wrap:wrap}
+  .navlinks a{font-size:.85rem; font-weight:600; color:var(--ink-2); padding:.4rem .7rem; border-radius:var(--radius-pill)}
+  .navlinks a:hover{background:var(--surface-2); text-decoration:none}
+  @media (max-width:720px){ .navlinks{display:none} }
+
+  /* ---- Hero -------------------------------------------------------------- */
+  .hero{position:relative; overflow:hidden; color:#fff;
+    background:linear-gradient(135deg,#0f766e 0%, #0d9488 45%, #0e7490 100%)}
+  .hero::after{content:""; position:absolute; inset:0; opacity:.18; pointer-events:none;
+    background:radial-gradient(900px 360px at 78% -10%, #fff, transparent 60%)}
+  .hero .wrap{position:relative; padding-block:clamp(2.5rem,7vw,5rem)}
+  .hero .eyebrow{color:#c8f3ec}
+  .hero h1{font-size:clamp(2rem,5.5vw,3.4rem); font-weight:800; margin:.6rem 0 0; max-width:18ch}
+  .hero .lede{color:#e6fffb; margin-top:1rem; max-width:60ch; font-size:clamp(1.05rem,2.4vw,1.35rem)}
+  .hero .chips{display:flex; gap:.5rem; flex-wrap:wrap; margin-top:1.6rem}
+  .hero-chip{display:inline-flex; align-items:center; gap:.45rem; font-size:.85rem; font-weight:600;
+    color:#063;background:rgba(255,255,255,.92); padding:.45rem .8rem; border-radius:var(--radius-pill)}
+  .hero-chip svg{width:16px;height:16px}
+
+  /* ---- Sections ---------------------------------------------------------- */
+  section{padding-block:clamp(2.5rem,6vw,4.5rem)}
+  .section-head{max-width:64ch; margin-bottom:var(--space-8)}
+  .section-head h2{font-size:clamp(1.5rem,3.4vw,2.1rem); font-weight:800; margin-top:.4rem}
+  .section-head p{margin-top:.6rem; font-size:1.05rem; color:var(--ink-2)}
+  .alt{background:var(--surface-2)}
+
+  /* ---- Cards ------------------------------------------------------------- */
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:var(--space-6); box-shadow:var(--shadow-sm)}
+  .grid{display:grid; gap:var(--space-4)}
+  .cols-2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .cols-3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .cols-4{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+
+  /* ---- Badges ------------------------------------------------------------ */
+  .badge{display:inline-flex; align-items:center; gap:.4rem; font-size:.74rem; font-weight:700;
+    padding:.28rem .6rem; border-radius:var(--radius-pill); letter-spacing:.02em; white-space:nowrap}
+  .badge .dot{width:7px;height:7px;border-radius:50%}
+  .badge.built{color:var(--built); background:var(--built-soft)} .badge.built .dot{background:var(--built)}
+  .badge.planned{color:var(--planned); background:var(--planned-soft)} .badge.planned .dot{background:var(--planned)}
+  .badge.readonly{color:var(--primary-strong); background:var(--primary-soft)} .badge.readonly .dot{background:var(--primary)}
+
+  /* ---- WAT diagram ------------------------------------------------------- */
+  .wat{display:flex; align-items:stretch; gap:var(--space-3); flex-wrap:wrap}
+  .wat .node{flex:1 1 200px; background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius); padding:var(--space-6); box-shadow:var(--shadow-sm)}
+  .wat .node h3{font-size:1.05rem; display:flex; align-items:center; gap:.5rem}
+  .wat .node .role{font-size:.78rem; font-weight:700; color:var(--primary-strong); text-transform:uppercase; letter-spacing:.08em}
+  .wat .node p{margin-top:.5rem; font-size:.92rem; color:var(--ink-2)}
+  .wat .arrow{align-self:center; color:var(--muted); flex:0 0 auto}
+  @media (max-width:760px){
+    .wat{flex-direction:column}
+    .wat .arrow{transform:rotate(90deg)}
+  }
+  .kb{margin-top:var(--space-4); display:flex; align-items:center; gap:var(--space-4);
+    background:var(--primary-soft); border:1px dashed var(--primary); border-radius:var(--radius); padding:var(--space-6)}
+  .kb .icon{flex:0 0 auto; color:var(--primary-strong)}
+  .kb h3{font-size:1rem} .kb p{font-size:.92rem; color:var(--ink-2); margin-top:.25rem}
+
+  /* ---- Layer cards ------------------------------------------------------- */
+  .layer{position:relative; display:flex; flex-direction:column; gap:var(--space-3)}
+  .layer .num{font-size:.8rem; font-weight:800; color:var(--primary-strong)}
+  .layer h3{font-size:1.15rem}
+  .layer .does{font-size:.92rem; color:var(--ink-2)}
+  .layer.future{border-style:dashed; background:transparent}
+  .layer .toprow{display:flex; align-items:center; justify-content:space-between; gap:var(--space-2)}
+
+  /* ---- Pipeline ---------------------------------------------------------- */
+  .flow{display:flex; flex-direction:column; align-items:stretch; gap:0}
+  .flow .step{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:var(--space-4) var(--space-6); box-shadow:var(--shadow-sm); display:flex; gap:var(--space-4); align-items:center}
+  .flow .step .k{font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); flex:0 0 84px}
+  .flow .step .body strong{display:block; font-size:1rem}
+  .flow .step .body span{font-size:.9rem; color:var(--ink-2)}
+  .flow .step.sheet{background:var(--primary-soft); border-color:var(--primary)}
+  .flow .step.gate{background:var(--surface-3)}
+  .flow .step.future{border-style:dashed; opacity:.85}
+  .flow .conn{align-self:center; height:26px; width:2px; background:linear-gradient(var(--border),var(--border))}
+  .flow .conn.dash{background:repeating-linear-gradient(var(--planned) 0 4px, transparent 4px 9px)}
+
+  /* ---- Safety pillars ---------------------------------------------------- */
+  .pillar{display:flex; flex-direction:column; gap:.5rem}
+  .pillar .icon{width:38px;height:38px;border-radius:10px; display:grid;place-items:center;
+    background:var(--primary-soft); color:var(--primary-strong)}
+  .pillar h3{font-size:1rem} .pillar p{font-size:.9rem; color:var(--ink-2)}
+
+  /* ---- Demo comparison --------------------------------------------------- */
+  .demo-note{display:flex;gap:.6rem;align-items:flex-start; background:var(--planned-soft); color:var(--planned);
+    border:1px solid color-mix(in srgb,var(--planned) 30%, transparent); border-radius:var(--radius-sm);
+    padding:.7rem .9rem; font-size:.88rem; font-weight:600; margin-bottom:var(--space-6)}
+  .compare{display:grid; gap:var(--space-4); grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); align-items:start}
+  .panel{border-radius:var(--radius); border:1px solid var(--border); background:var(--surface); overflow:hidden; box-shadow:var(--shadow-sm)}
+  .panel .ph{padding:var(--space-4) var(--space-6); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:.5rem}
+  .panel.before .ph{background:var(--escalate-soft)}
+  .panel.after .ph{background:var(--grounded-soft)}
+  .panel .ph h3{font-size:1rem}
+  .panel .pb{padding:var(--space-6); display:flex; flex-direction:column; gap:var(--space-3)}
+  .msg{font-family:var(--mono); font-size:.82rem; line-height:1.55; background:var(--surface-2);
+    border:1px solid var(--border); border-radius:var(--radius-sm); padding:var(--space-4); color:var(--ink-2); white-space:pre-wrap}
+  .chiprow{display:flex; flex-wrap:wrap; gap:.4rem}
+  .src{font-family:var(--mono); font-size:.72rem; font-weight:600; padding:.25rem .55rem; border-radius:var(--radius-pill);
+    background:var(--grounded-soft); color:var(--grounded)}
+  .flag{font-family:var(--mono); font-size:.72rem; font-weight:600; padding:.25rem .55rem; border-radius:var(--radius-pill);
+    background:var(--escalate-soft); color:var(--escalate)}
+  .statusline{font-size:.82rem; font-weight:700; display:flex; align-items:center; gap:.45rem}
+  .statusline.esc{color:var(--escalate)} .statusline.ok{color:var(--grounded)}
+  .vs{display:grid;place-items:center; font-weight:800; color:var(--muted); padding:var(--space-2)}
+
+  /* ---- Roadmap ----------------------------------------------------------- */
+  .road{display:grid; gap:var(--space-4); grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .road .step{position:relative; padding-left:3.4rem}
+  .road .step .n{position:absolute; left:0; top:0; width:2.4rem;height:2.4rem; border-radius:12px;
+    display:grid;place-items:center; font-weight:800; background:var(--primary); color:var(--primary-ink)}
+  .road .step.b2 .n{background:var(--surface-3); color:var(--ink-2)}
+  .road h3{font-size:1.05rem}
+  .road p{font-size:.92rem; color:var(--ink-2); margin-top:.35rem}
+
+  /* ---- Footer ------------------------------------------------------------ */
+  footer{border-top:1px solid var(--border); background:var(--surface)}
+  footer .wrap{padding-block:var(--space-8); display:flex; flex-wrap:wrap; gap:var(--space-4); justify-content:space-between; align-items:center}
+  footer .links{display:flex; gap:var(--space-4); flex-wrap:wrap; font-size:.9rem}
+  .lock{display:inline-flex; align-items:center; gap:.4rem; font-size:.8rem; font-weight:700; color:var(--muted)}
+
+  .stack-sm > * + *{margin-top:var(--space-2)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <span class="brand">
+      <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0d9488"/><path d="M6 12h13a4 4 0 1 0-4-4M6 20h17a4 4 0 1 1-4 4M6 16h9" stroke="white" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>
+      Tradewind
+    </span>
+    <nav class="navlinks" aria-label="Sections">
+      <a href="#what">What it is</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#layers">Layers</a>
+      <a href="#safety">Safety</a>
+      <a href="#demo">Demo</a>
+      <a href="#roadmap">Roadmap</a>
+    </nav>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Nerumi · Internal</p>
+    <h1>An intelligent assistant layer on top of Jobber</h1>
+    <p class="lede">Tradewind watches for new leads, cleans up messy customer data, and drafts replies in the owner's voice — then waits for a human to approve. It never changes data or sends a message on its own.</p>
+    <div class="chips">
+      <span class="hero-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> Read-only today</span>
+      <span class="hero-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Human approves everything</span>
+      <span class="hero-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V7z"/></svg> Never invents facts</span>
+    </div>
+  </div>
+</header>
+
+<!-- WHAT IT IS -->
+<section id="what">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">The one-paragraph version</p>
+      <h2>What Tradewind is</h2>
+      <p>Home-services businesses — plumbers, landscapers, fencing companies — run on <strong>Jobber</strong>, a CRM whose funnel is <em>Request → Quote → Job → Invoice</em>. Their two recurring headaches: inbound leads slip through the cracks, and customer records are messy (duplicates, half-filled). Tradewind sits on top of Jobber as a sharp assistant: it reads each new lead and the customer attached to it, flags duplicate or incomplete records, and prepares a grounded reply — then hands the work to the owner to sign off. Think "prepared and waiting for approval," not "a bot let loose on the business."</p>
+    </div>
+    <div class="grid cols-3">
+      <div class="card stack-sm"><h3>Reads the leads</h3><p class="muted">Picks up every new Jobber Request and the linked customer automatically.</p></div>
+      <div class="card stack-sm"><h3>Cleans the data</h3><p class="muted">Flags likely duplicate and incomplete client records for review.</p></div>
+      <div class="card stack-sm"><h3>Drafts the reply</h3><p class="muted">Writes an email + text in the owner's voice — held for approval.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="architecture" class="alt">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">How it's built</p>
+      <h2>The WAT architecture</h2>
+      <p>The system deliberately separates <em>thinking</em> from <em>doing</em> — that separation is what makes it reliable. If one AI tries to do every step, small errors pile up. So judgment lives in one layer and exact execution in another.</p>
+    </div>
+
+    <div class="wat" role="img" aria-label="Workflows feed the Agent, which calls the Tools. The Agent grounds its claims in the Knowledge base.">
+      <div class="node">
+        <span class="role">The instructions</span>
+        <h3>Workflows</h3>
+        <p>Plain-language playbooks describing each task, step by step.</p>
+      </div>
+      <span class="arrow" aria-hidden="true"><svg width="34" height="24" viewBox="0 0 34 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h28M22 4l8 8-8 8"/></svg></span>
+      <div class="node">
+        <span class="role">The decision-maker</span>
+        <h3>Agent</h3>
+        <p>The AI. Reads the workflow and makes the judgment calls — "is this likely a duplicate?", "what should the reply say?"</p>
+      </div>
+      <span class="arrow" aria-hidden="true"><svg width="34" height="24" viewBox="0 0 34 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h28M22 4l8 8-8 8"/></svg></span>
+      <div class="node">
+        <span class="role">The execution</span>
+        <h3>Tools</h3>
+        <p>Small, predictable scripts that do the exact, repeatable work — reads, sheet writes, rules.</p>
+      </div>
+    </div>
+
+    <div class="kb">
+      <span class="icon" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V6a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M8 8h8M8 12h6"/></svg></span>
+      <div>
+        <h3>The Knowledge base — the only source of facts</h3>
+        <p>The Agent may state a price, service, or policy <strong>only</strong> if it comes from owner-confirmed knowledge. If a fact isn't there, it escalates the question to the owner instead of guessing.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LAYERS -->
+<section id="layers">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Built in layers, safest first</p>
+      <h2>The layer progression</h2>
+      <p>Each layer is proven before the next is added. Everything built so far is <strong>read-only</strong>, and nothing has run on real customer data yet — it's validated against a test sandbox and clearly-labeled sample data.</p>
+    </div>
+    <div class="grid cols-3">
+      <article class="card layer">
+        <div class="toprow"><span class="num">LAYER 1</span><span class="badge built"><span class="dot"></span>Built &amp; verified</span></div>
+        <h3>Read &amp; Surface</h3>
+        <p class="does">Polls new Jobber Requests, reads the linked customer, flags likely <strong>duplicates</strong> and <strong>incomplete</strong> records, and writes everything to a Google Sheet for the owner.</p>
+        <span class="badge readonly"><span class="dot"></span>Read-only</span>
+      </article>
+      <article class="card layer">
+        <div class="toprow"><span class="num">LAYER 2</span><span class="badge built"><span class="dot"></span>Built &amp; verified</span></div>
+        <h3>Draft &amp; Propose</h3>
+        <p class="does">Drafts a follow-up (email + text) grounded in the knowledge base, and proposes high-confidence cleanups (e.g. "merge these two duplicates"). Both land in the Sheet with an <strong>approve / edit / reject</strong> control.</p>
+        <span class="badge readonly"><span class="dot"></span>Read-only</span>
+      </article>
+      <article class="card layer future">
+        <div class="toprow"><span class="num">LAYER 3</span><span class="badge planned"><span class="dot"></span>Planned</span></div>
+        <h3>Execution</h3>
+        <p class="does">Once the owner approves, actually send the message and apply the change in Jobber — the first capability that can change data or reach a customer, and so the most carefully gated.</p>
+        <span class="badge planned"><span class="dot"></span>Not built yet</span>
+      </article>
+    </div>
+
+    <h3 style="margin:var(--space-12) 0 var(--space-6); font-size:1.15rem">How a lead flows through the system</h3>
+    <div class="flow" role="img" aria-label="Jobber feeds Layer 1 read and hygiene, which writes to the Google Sheet. Layer 2 reads the sheet and the knowledge base to produce drafts and proposals, which go to owner approval. Approved items would flow to the planned Layer 3 execution.">
+      <div class="step"><span class="k">Source</span><span class="body"><strong>Jobber</strong><span>A new Request + customer arrives — read only.</span></span></div>
+      <div class="conn"></div>
+      <div class="step"><span class="k">Layer 1</span><span class="body"><strong>Read &amp; flag</strong><span>Ingest the lead; flag duplicate / incomplete records.</span></span></div>
+      <div class="conn"></div>
+      <div class="step sheet"><span class="k">Surface</span><span class="body"><strong>Google Sheet</strong><span>The owner's review desk — every finding lands here.</span></span></div>
+      <div class="conn"></div>
+      <div class="step gate"><span class="k">Layer 2</span><span class="body"><strong>Draft + propose</strong><span>Grounded reply &amp; cleanup proposals, each with its provenance.</span></span></div>
+      <div class="conn"></div>
+      <div class="step"><span class="k">Gate</span><span class="body"><strong>Owner approves / edits / rejects</strong><span>Nothing proceeds without a human decision.</span></span></div>
+      <div class="conn dash"></div>
+      <div class="step future"><span class="k">Layer 3</span><span class="body"><strong>Send + write to Jobber</strong><span class="muted">Planned — not built. The only step that acts.</span></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- SAFETY -->
+<section id="safety" class="alt">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Why it's trustworthy, not reckless</p>
+      <h2>The safety design</h2>
+      <p>Trust is built into the structure, not bolted on. Four guarantees hold at every step.</p>
+    </div>
+    <div class="grid cols-4">
+      <div class="card pillar">
+        <span class="icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span>
+        <h3>Least privilege</h3>
+        <p>The Jobber connection asks for <strong>read-only</strong> permission. There is no send/message capability anywhere in the code.</p>
+      </div>
+      <div class="card pillar">
+        <span class="icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></span>
+        <h3>Never invents facts</h3>
+        <p>Every customer-facing claim must come from confirmed knowledge. A built-in <strong>grounding gate</strong> blocks any draft that cites an unconfirmed fact.</p>
+      </div>
+      <div class="card pillar">
+        <span class="icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <h3>Approval gate</h3>
+        <p>Drafts and proposals are surfaced with their sources and an approve / edit / reject control. The system never overwrites an owner's edits.</p>
+      </div>
+      <div class="card pillar">
+        <span class="icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></span>
+        <h3>Sample can't be sent</h3>
+        <p>Demo knowledge is tagged as sample; drafts built on it are flagged so they can never be sent as if they were real, confirmed facts.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO -->
+<section id="demo">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">The reliability story, made visible</p>
+      <h2>The GreenLeaf demo</h2>
+      <p>To show the system without a live client, the knowledge base is filled with sample data for a made-up landscaping company, <strong>GreenLeaf Landscaping</strong>. The same lead is run twice — the only thing that changes the result is whether confirmed knowledge exists.</p>
+    </div>
+
+    <p class="demo-note"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg> All <code>knowledge/</code> content is fictional <strong>sample data</strong> (clearly labeled <code>status: sample</code>) — GreenLeaf is not a real business.</p>
+
+    <div class="compare">
+      <article class="panel before">
+        <div class="ph"><h3>Before — knowledge empty</h3><span class="badge planned"><span class="dot"></span>escalates</span></div>
+        <div class="pb">
+          <p class="muted" style="font-size:.9rem">Lead asks: <em>"Weekly mowing + a couple of overgrown beds — what would you charge?"</em></p>
+          <div class="msg">Hi Dana, thanks for reaching out! I want to give you accurate info rather than a guess, so let me confirm a couple of details and get right back to you.</div>
+          <div>
+            <p class="muted" style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem">Escalated to owner</p>
+            <div class="chiprow">
+              <span class="flag">price not confirmed</span>
+              <span class="flag">service not confirmed</span>
+            </div>
+          </div>
+          <p class="statusline esc"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> status: needs_owner_input</p>
+        </div>
+      </article>
+
+      <div class="vs" aria-hidden="true">→</div>
+
+      <article class="panel after">
+        <div class="ph"><h3>After — sample knowledge loaded</h3><span class="badge built"><span class="dot"></span>grounded</span></div>
+        <div class="pb">
+          <p class="muted" style="font-size:.9rem">Same lead. Same pipeline. Now every claim is backed by a file.</p>
+          <div class="msg">Hi Dana, thanks for reaching out! Good news — you're in our Austin service area, and weekly mowing and bed cleanups are both things we do. Weekly mowing starts at $45 a visit, and freshening up overgrown beds usually runs $150–$400 by size. The estimate is free — what day works for a quick look?</div>
+          <div>
+            <p class="muted" style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem">Grounded in</p>
+            <div class="chiprow">
+              <span class="src">services.md</span>
+              <span class="src">pricing.md</span>
+              <span class="src">service-area.md</span>
+              <span class="src">voice.md</span>
+            </div>
+          </div>
+          <p class="statusline ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> status: drafted · ready for approval</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap" class="alt">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">What's next</p>
+      <h2>Roadmap</h2>
+      <p>Our first real market-validation interview — with a business in the fencing trade — pointed at the highest-value next step.</p>
+    </div>
+    <div class="road">
+      <div class="step b1">
+        <span class="n">1</span>
+        <h3>Lead scoring &amp; qualification <span class="badge readonly" style="vertical-align:middle"><span class="dot"></span>read-only</span></h3>
+        <p>The fencing business is <strong>capacity-constrained, not lead-starved</strong> ("lots of customers, can't take them all"; "most Facebook leads are trash"). They don't need more leads — they need to know <em>which</em> to chase fast vs. politely defer, ranked by source, job scope, urgency, and service-area fit. This is the gap between "nice tool" and "must-have."</p>
+      </div>
+      <div class="step b2">
+        <span class="n">2</span>
+        <h3>Layer 3 — Execution <span class="badge planned" style="vertical-align:middle"><span class="dot"></span>planned</span></h3>
+        <p>Approved drafts get sent and approved cleanups get applied in Jobber — the first capability that can change data or reach a customer, and therefore the most carefully gated and the last to ship.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span class="lock"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> Private &amp; internal — Nerumi IP. Not for distribution.</span>
+    <nav class="links" aria-label="Repository docs">
+      <a href="../README.md">README</a>
+      <a href="../CLAUDE.md">Architecture &amp; rules</a>
+      <a href="../workflows/">Workflows</a>
+      <a href="../research/discovery-fencing-interview.md">Discovery notes</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

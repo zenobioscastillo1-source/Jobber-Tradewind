@@ -1,0 +1,15 @@
+# Secrets & credentials — NEVER commit
+.env
+*_token.json
+jobber_token.json
+credentials.json
+token.json
+
+# Disposable intermediates
+.tmp/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/

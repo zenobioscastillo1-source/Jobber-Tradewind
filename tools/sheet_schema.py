@@ -84,6 +84,29 @@ PROPOSALS_COLUMNS = [
     "owner_notes",        # free text for the owner
 ]
 
+# ---- Score & Prioritize (read-only) tab --------------------------------------------------
+# Internal triage: rank each surfaced Request by likely value/fit. The score is NOT customer-facing
+# (it never leaves the Sheet); only a deferral *reply* (a Layer 2 draft) is. One row per Request.
+
+# Dedup key = request_id (column A).
+SCORING_COLUMNS = [
+    "request_id",          # dedup key (the Request this score is for)
+    "created_at",          # Request.createdAt (ISO8601)
+    "request_title",       # Request.title
+    "request_source",      # Request.source
+    "client_id",           # linked Client id
+    "client_name",
+    "score",               # tool: deterministic 0-100 (tools/scoring_rules.py)
+    "priority_tier",       # AGENT: hot / warm / cool / defer (confirms the tool's suggestion)
+    "priority_reason",     # AGENT: one-line rationale
+    "top_signals",         # tool: source/value/urgency/area/reachable summary, "; "-joined
+    "recommended_action",  # AGENT: chase today / follow up / defer to waitlist
+    "deferral_drafted",    # cross-link: yes/no (a Layer 2 waitlist draft was queued for cool/defer)
+    "status",              # system: scored ; owner dropdown: chasing / deferred / reviewed
+    "surfaced_at",         # ISO timestamp the system logged the row
+    "owner_notes",         # free text for the owner
+]
+
 # Per-target Sheet config. The tab name itself is resolved at runtime from .env.
 # Optional "dropdown" applies a data-validation list to the named column so the owner gets a
 # guided approve/edit/reject choice (showCustomUi, non-strict — system values pass without a warning).
@@ -120,6 +143,15 @@ TARGETS = {
         "system_statuses": {"", "proposed"},
         "dropdown": {"column": "status",
                      "values": ["approved", "edit", "rejected", "proposed"]},
+    },
+    "scoring": {
+        "columns": SCORING_COLUMNS,
+        "key": "request_id",
+        "tab_env": "SCORING_TAB",
+        "tab_default": "Prioritized Leads",
+        "system_statuses": {"", "scored"},
+        "dropdown": {"column": "status",
+                     "values": ["chasing", "deferred", "reviewed", "scored"]},
     },
 }
 

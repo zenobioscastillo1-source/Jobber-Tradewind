@@ -4,8 +4,8 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/built%20on-WAT%20framework-0d9488?style=flat-square" alt="Built on the WAT framework">
-  <img src="https://img.shields.io/badge/Layers%201%E2%80%932-read--only%20%C2%B7%20built-22c55e?style=flat-square" alt="Layers 1-2 read-only, built">
-  <img src="https://img.shields.io/badge/Layer%203-planned-f59e0b?style=flat-square" alt="Layer 3 planned">
+  <img src="https://img.shields.io/badge/Read--only%20layers-built%20%C2%B7%20read%20%C2%B7%20score%20%C2%B7%20draft-22c55e?style=flat-square" alt="Read-only layers built: read, score, draft">
+  <img src="https://img.shields.io/badge/Layer%203%20(execution)-planned-f59e0b?style=flat-square" alt="Layer 3 execution planned">
   <img src="https://img.shields.io/badge/validated%20on-sandbox%20%2B%20sample-38bdf8?style=flat-square" alt="Validated on sandbox and sample data">
   <img src="https://img.shields.io/badge/access-private%20%C2%B7%20Nerumi%20IP-8b5cf6?style=flat-square" alt="Private — Nerumi IP">
 </p>
@@ -30,6 +30,7 @@ Think of it as a sharp assistant who **prepares the work and hands it to the own
 than a bot let loose on the business. Three jobs, all read-only today:
 
 - **Reads the leads** — picks up every new Jobber Request and the linked customer, automatically.
+- **Ranks the leads** — scores each new lead by value & fit so the owner chases the right ones first, and politely defers the rest.
 - **Cleans the data** — flags likely duplicate and incomplete client records for review.
 - **Drafts the reply** — writes an email + text in the owner's voice, grounded in confirmed facts, held for approval.
 
@@ -64,6 +65,7 @@ Each layer is proven before the next is added. A lead flows top-to-bottom throug
 |-------|--------------|--------|
 | **1 · Read & Surface** | Polls new Jobber Requests, reads the linked customer, flags likely **duplicates** and **incomplete** records, writes everything to a Google Sheet. | 🟢 **Built & verified** (read-only) |
 | **2 · Draft & Propose** | Drafts a follow-up (email + SMS) grounded in the knowledge base, and proposes high-confidence cleanups (e.g. "merge these two duplicates"). Both land in the Sheet with an **approve / edit / reject** control. | 🟢 **Built & verified** (read-only) |
+| **2.5 · Score & Prioritize** | Ranks each new lead 0–100 by source, job value, urgency, service-area fit and reachability into **hot / warm / cool / defer**, and queues a polite waitlist reply for the low-priority ones. Built for **capacity-constrained** owners who need to chase the right leads first. | 🟢 **Built** (read-only) |
 | **3 · Execution** | Once the owner approves, actually send the message and apply the change in Jobber. | 🟠 **Planned — not built** |
 
 > **Two honest caveats for review:**
@@ -102,12 +104,15 @@ Identical input; the only thing that moved the draft from "escalate everything" 
 
 ## 🗺️ Roadmap
 
-1. **Lead scoring & qualification (the validated next must-have).** Our first real market-validation
-   interview — with a business in the **fencing** trade — surfaced a gap we hadn't built for: they're
-   *capacity-constrained, not lead-starved* ("lots of customers, can't take them all"; "most Facebook
-   leads are trash"). They don't need *more* leads — they need to know *which* to chase fast vs. politely
-   defer, ranked by source, job scope, urgency, and service-area fit. *(See [`research/`](research/) for
-   the anonymized discovery notes.)* Still read-only.
+> **Why scoring exists.** Our first real market-validation interview — a business in the **fencing**
+> trade — surfaced that these owners are *capacity-constrained, not lead-starved* ("lots of customers,
+> can't take them all"; "most Facebook leads are trash"). They don't need *more* leads — they need to
+> know *which* to chase fast vs. politely defer. That's the **Score & Prioritize** layer above, now
+> built (read-only). *(See [`research/`](research/) for the anonymized discovery notes.)*
+
+1. **Real-data onboarding.** The read-only pipeline (read · score · draft) is proven on a test sandbox
+   and labeled sample data; the next milestone is a first run against a live Jobber account, where the
+   owner tunes the scoring weights and confirms the knowledge base.
 2. **Layer 3 — execution.** Approved drafts get sent and approved cleanups get applied in Jobber — the
    first capability that can change data or reach a customer, and therefore the most carefully gated.
 
@@ -116,8 +121,8 @@ Identical input; the only thing that moved the draft from "escalate everything" 
 ## 🧑‍💻 For developers
 
 - **[CLAUDE.md](CLAUDE.md)** — the architecture and the action-safety rules the agent operates under.
-- **[workflows/](workflows/)** — the step-by-step SOPs: `ingest_and_surface.md` (Layer 1), `draft_and_propose.md` (Layer 2).
-- **[tools/](tools/)** — the deterministic Python (Jobber reads, Sheet I/O, hygiene rules, the grounding gate, cleanup proposals).
+- **[workflows/](workflows/)** — the step-by-step SOPs: `ingest_and_surface.md` (Layer 1), `draft_and_propose.md` (Layer 2), `score_and_prioritize.md` (Score & Prioritize).
+- **[tools/](tools/)** — the deterministic Python (Jobber reads, Sheet I/O, hygiene rules, the grounding gate, cleanup proposals, lead scoring).
 - **[knowledge/](knowledge/)** — the owner-confirmed source of truth (currently GreenLeaf *sample* data).
 - Secrets (`.env`, `credentials.json`, `*_token.json`) are **gitignored and never committed**; copy `.env.example` to `.env` and supply your own.
 

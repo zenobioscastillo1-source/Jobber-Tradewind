@@ -180,6 +180,43 @@
   .statusline.esc{color:var(--escalate)} .statusline.ok{color:var(--grounded)}
   .vs{display:grid;place-items:center; font-weight:800; color:var(--muted); padding:var(--space-2)}
 
+  /* ---- Scoring (ranked leads) ------------------------------------------- */
+  .ranked{display:flex; flex-direction:column; gap:var(--space-2)}
+  .ranked .row{display:flex; align-items:center; gap:var(--space-3); background:var(--surface);
+    border:1px solid var(--border); border-radius:var(--radius-sm); padding:.6rem .9rem; box-shadow:var(--shadow-sm)}
+  .ranked .score{font-family:var(--mono); font-weight:800; font-size:1.05rem; min-width:2.4rem; text-align:right; color:var(--ink)}
+  .ranked .who{font-weight:700; font-size:.92rem}
+  .ranked .what{font-size:.86rem; color:var(--muted)}
+  .ranked .act{margin-left:auto; font-size:.82rem; font-weight:600; color:var(--ink-2); white-space:nowrap}
+  .tier{font-family:var(--mono); font-size:.7rem; font-weight:800; padding:.2rem .55rem; border-radius:var(--radius-pill);
+    text-transform:uppercase; letter-spacing:.04em; min-width:3.4rem; text-align:center}
+  .tier.hot{color:var(--escalate); background:var(--escalate-soft)}
+  .tier.warm{color:var(--planned); background:var(--planned-soft)}
+  .tier.cool{color:var(--primary-strong); background:var(--primary-soft)}
+  .tier.defer{color:var(--muted); background:var(--surface-3)}
+  @media (max-width:560px){ .ranked .what{display:none} .ranked .act{display:none} }
+
+  /* ---- Google-Sheet mock ------------------------------------------------- */
+  .sheet-mock{border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; box-shadow:var(--shadow); background:var(--surface)}
+  .sheet-mock .bar{display:flex; align-items:center; gap:.5rem; padding:.55rem .8rem; background:var(--surface-2); border-bottom:1px solid var(--border)}
+  .sheet-mock .bar .gicon{width:17px;height:17px;border-radius:4px;background:#15803d;display:inline-grid;place-items:center;color:#fff;font-size:.62rem;font-weight:800;flex:0 0 auto}
+  .sheet-mock .bar .name{font-size:.85rem; font-weight:800; color:var(--ink)}
+  .sheet-mock .bar .hint{margin-left:auto; font-size:.72rem; color:var(--muted); font-weight:600; white-space:nowrap}
+  .sheet-scroll{overflow-x:auto}
+  table.gs{border-collapse:collapse; font-size:.74rem; white-space:nowrap}
+  table.gs th, table.gs td{border:1px solid var(--border); padding:.32rem .55rem; text-align:left; max-width:180px; overflow:hidden; text-overflow:ellipsis}
+  table.gs thead th{background:var(--surface-3); color:var(--muted); font-family:var(--mono); font-size:.68rem; font-weight:700; text-align:center}
+  table.gs td.rn{background:var(--surface-3); color:var(--muted); font-family:var(--mono); font-size:.68rem; font-weight:700; text-align:center; min-width:1.9rem}
+  table.gs tr.colnames td{background:var(--surface-2); font-family:var(--mono); font-size:.69rem; font-weight:800; color:var(--ink-2)}
+  table.gs td.num{font-family:var(--mono); font-weight:800; text-align:right; color:var(--ink)}
+  table.gs td.t{font-weight:800; text-transform:uppercase; font-size:.68rem; letter-spacing:.03em; text-align:center}
+  table.gs td.t.hot{background:var(--escalate-soft); color:var(--escalate)}
+  table.gs td.t.warm{background:var(--planned-soft); color:var(--planned)}
+  table.gs td.t.cool{background:var(--primary-soft); color:var(--primary-strong)}
+  table.gs td.t.defer{background:var(--surface-3); color:var(--muted)}
+  table.gs td.dd::after{content:" ▾"; color:var(--muted)}
+  table.gs td.note{color:var(--muted); font-style:italic}
+
   /* ---- Roadmap ----------------------------------------------------------- */
   .road{display:grid; gap:var(--space-4); grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
   .road .step{position:relative; padding-left:3.4rem}
@@ -221,7 +258,7 @@
   <div class="wrap">
     <p class="eyebrow">Nerumi · Internal</p>
     <h1>An intelligent assistant layer on top of Jobber</h1>
-    <p class="lede">Tradewind watches for new leads, cleans up messy customer data, and drafts replies in the owner's voice — then waits for a human to approve. It never changes data or sends a message on its own.</p>
+    <p class="lede">Tradewind watches for new leads, ranks them by value &amp; fit, cleans up messy customer data, and drafts replies in the owner's voice — then waits for a human to approve. It never changes data or sends a message on its own.</p>
     <div class="chips">
       <span class="hero-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> Read-only today</span>
       <span class="hero-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Human approves everything</span>
@@ -236,10 +273,11 @@
     <div class="section-head">
       <p class="eyebrow">The one-paragraph version</p>
       <h2>What Tradewind is</h2>
-      <p>Home-services businesses — plumbers, landscapers, fencing companies — run on <strong>Jobber</strong>, a CRM whose funnel is <em>Request → Quote → Job → Invoice</em>. Their two recurring headaches: inbound leads slip through the cracks, and customer records are messy (duplicates, half-filled). Tradewind sits on top of Jobber as a sharp assistant: it reads each new lead and the customer attached to it, flags duplicate or incomplete records, and prepares a grounded reply — then hands the work to the owner to sign off. Think "prepared and waiting for approval," not "a bot let loose on the business."</p>
+      <p>Home-services businesses — plumbers, landscapers, fencing companies — run on <strong>Jobber</strong>, a CRM whose funnel is <em>Request → Quote → Job → Invoice</em>. Their two recurring headaches: inbound leads slip through the cracks, and customer records are messy (duplicates, half-filled). Tradewind sits on top of Jobber as a sharp assistant: it reads each new lead and the customer attached to it, ranks it by how worth chasing it is, flags duplicate or incomplete records, and prepares a grounded reply — then hands the work to the owner to sign off. Think "prepared and waiting for approval," not "a bot let loose on the business."</p>
     </div>
-    <div class="grid cols-3">
+    <div class="grid cols-4">
       <div class="card stack-sm"><h3>Reads the leads</h3><p class="muted">Picks up every new Jobber Request and the linked customer automatically.</p></div>
+      <div class="card stack-sm"><h3>Ranks the leads</h3><p class="muted">Scores each lead by value &amp; fit so the owner chases the right ones first.</p></div>
       <div class="card stack-sm"><h3>Cleans the data</h3><p class="muted">Flags likely duplicate and incomplete client records for review.</p></div>
       <div class="card stack-sm"><h3>Drafts the reply</h3><p class="muted">Writes an email + text in the owner's voice — held for approval.</p></div>
     </div>
@@ -293,7 +331,7 @@
       <h2>The layer progression</h2>
       <p>Each layer is proven before the next is added. Everything built so far is <strong>read-only</strong>, and nothing has run on real customer data yet — it's validated against a test sandbox and clearly-labeled sample data.</p>
     </div>
-    <div class="grid cols-3">
+    <div class="grid cols-4">
       <article class="card layer">
         <div class="toprow"><span class="num">LAYER 1</span><span class="badge built"><span class="dot"></span>Built &amp; verified</span></div>
         <h3>Read &amp; Surface</h3>
@@ -306,6 +344,12 @@
         <p class="does">Drafts a follow-up (email + text) grounded in the knowledge base, and proposes high-confidence cleanups (e.g. "merge these two duplicates"). Both land in the Sheet with an <strong>approve / edit / reject</strong> control.</p>
         <span class="badge readonly"><span class="dot"></span>Read-only</span>
       </article>
+      <article class="card layer">
+        <div class="toprow"><span class="num">LAYER 2.5</span><span class="badge built"><span class="dot"></span>Built</span></div>
+        <h3>Score &amp; Prioritize</h3>
+        <p class="does">Ranks each new lead <strong>0–100</strong> by source, job value, urgency, area fit and reachability into <strong>hot / warm / cool / defer</strong> — and queues a polite waitlist reply for the low-priority ones.</p>
+        <span class="badge readonly"><span class="dot"></span>Read-only</span>
+      </article>
       <article class="card layer future">
         <div class="toprow"><span class="num">LAYER 3</span><span class="badge planned"><span class="dot"></span>Planned</span></div>
         <h3>Execution</h3>
@@ -315,12 +359,14 @@
     </div>
 
     <h3 style="margin:var(--space-12) 0 var(--space-6); font-size:1.15rem">How a lead flows through the system</h3>
-    <div class="flow" role="img" aria-label="Jobber feeds Layer 1 read and hygiene, which writes to the Google Sheet. Layer 2 reads the sheet and the knowledge base to produce drafts and proposals, which go to owner approval. Approved items would flow to the planned Layer 3 execution.">
+    <div class="flow" role="img" aria-label="Jobber feeds Layer 1 read and hygiene, which writes to the Google Sheet. The leads are then scored and ranked from hot to defer. Layer 2 reads the sheet and the knowledge base to produce drafts and proposals, which go to owner approval. Approved items would flow to the planned Layer 3 execution.">
       <div class="step"><span class="k">Source</span><span class="body"><strong>Jobber</strong><span>A new Request + customer arrives — read only.</span></span></div>
       <div class="conn"></div>
       <div class="step"><span class="k">Layer 1</span><span class="body"><strong>Read &amp; flag</strong><span>Ingest the lead; flag duplicate / incomplete records.</span></span></div>
       <div class="conn"></div>
       <div class="step sheet"><span class="k">Surface</span><span class="body"><strong>Google Sheet</strong><span>The owner's review desk — every finding lands here.</span></span></div>
+      <div class="conn"></div>
+      <div class="step"><span class="k">Layer 2.5</span><span class="body"><strong>Score &amp; rank</strong><span>Order the leads hot → defer; queue waitlist replies for the rest.</span></span></div>
       <div class="conn"></div>
       <div class="step gate"><span class="k">Layer 2</span><span class="body"><strong>Draft + propose</strong><span>Grounded reply &amp; cleanup proposals, each with its provenance.</span></span></div>
       <div class="conn"></div>
@@ -370,10 +416,45 @@
     <div class="section-head">
       <p class="eyebrow">The reliability story, made visible</p>
       <h2>The GreenLeaf demo</h2>
-      <p>To show the system without a live client, the knowledge base is filled with sample data for a made-up landscaping company, <strong>GreenLeaf Landscaping</strong>. The same lead is run twice — the only thing that changes the result is whether confirmed knowledge exists.</p>
+      <p>To show the system without a live client, everything runs on sample data for a made-up landscaping company, <strong>GreenLeaf Landscaping</strong>. First it <strong>ranks</strong> a batch of incoming leads; then it <strong>drafts</strong> a reply whose every claim traces to a confirmed fact — run twice to show what changes when knowledge exists.</p>
     </div>
 
     <p class="demo-note"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg> All <code>knowledge/</code> content is fictional <strong>sample data</strong> (clearly labeled <code>status: sample</code>) — GreenLeaf is not a real business.</p>
+
+    <h3 style="margin:0 0 var(--space-2); font-size:1.15rem">Ranked the moment they land</h3>
+    <p class="muted" style="margin:0 0 var(--space-6); font-size:.92rem; max-width:62ch">A capacity-constrained owner doesn't need more leads — they need the right ones first. Each lead is scored 0–100 by source, job value, urgency, area fit and reachability, then sorted hot → defer.</p>
+    <div class="ranked" role="img" aria-label="Sample leads ranked by score from 98 down to 12 and tagged hot, warm, cool or defer. The two lowest are marked for a waitlist reply.">
+      <div class="row"><span class="score">98</span><span class="tier hot">hot</span><span><span class="who">Maria Gonzalez</span> · <span class="what">Full backyard install — needed this week</span></span><span class="act">Call today</span></div>
+      <div class="row"><span class="score">78</span><span class="tier hot">hot</span><span><span class="who">Daniel Brooks</span> · <span class="what">Patio + retaining wall installation</span></span><span class="act">Call today</span></div>
+      <div class="row"><span class="score">58</span><span class="tier warm">warm</span><span><span class="who">Priya Shah</span> · <span class="what">Monthly lawn maintenance</span></span><span class="act">Follow up today</span></div>
+      <div class="row"><span class="score">48</span><span class="tier cool">cool</span><span><span class="who">Tom Becker</span> · <span class="what">Small flower-bed refresh</span></span><span class="act">Light touch</span></div>
+      <div class="row"><span class="score">30</span><span class="tier defer">defer</span><span><span class="who">Greg Stone</span> · <span class="what">"How much for mowing?" — out of area</span></span><span class="act">Waitlist reply</span></div>
+      <div class="row"><span class="score">12</span><span class="tier defer">defer</span><span><span class="who">K. Lawson</span> · <span class="what">"Need a price" — no contact info</span></span><span class="act">Waitlist reply</span></div>
+    </div>
+
+    <p class="muted" style="margin:var(--space-6) 0 var(--space-3); font-size:.92rem; max-width:62ch">…and here's exactly how that lands in the owner's Google Sheet — the live <strong>Prioritized Leads</strong> tab, every column the engine writes:</p>
+    <div class="sheet-mock">
+      <div class="bar"><span class="gicon" aria-hidden="true">▦</span><span class="name">Prioritized Leads</span><span class="hint">scroll right for all 15 columns →</span></div>
+      <div class="sheet-scroll">
+        <table class="gs" role="img" aria-label="A Google Sheets 'Prioritized Leads' tab. Columns: request_id, created_at, request_title, request_source, client_id, client_name, score, priority_tier, priority_reason, top_signals, recommended_action, deferral_drafted, status, surfaced_at, owner_notes. Six sample leads are listed, ranked by score from 98 (hot) down to 12 (defer), each tagged SYNTHETIC DEMO DATA.">
+          <thead>
+            <tr><th>&nbsp;</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th><th>K</th><th>L</th><th>M</th><th>N</th><th>O</th></tr>
+          </thead>
+          <tbody>
+            <tr class="colnames"><td class="rn">1</td><td>request_id</td><td>created_at</td><td>request_title</td><td>request_source</td><td>client_id</td><td>client_name</td><td>score</td><td>priority_tier</td><td>priority_reason</td><td>top_signals</td><td>recommended_action</td><td>deferral_drafted</td><td>status</td><td>surfaced_at</td><td>owner_notes</td></tr>
+            <tr><td class="rn">2</td><td>REQ-SCORE-001</td><td>2026-06-05T09:00:00Z</td><td>Full backyard landscape install — needed this week before our event</td><td>Referral</td><td>CLI-S-1</td><td>Maria Gonzalez</td><td class="num">98</td><td class="t hot">hot</td><td>Source: referral (30 pts); Job value: high (install, full); Time-sensitive: this week</td><td>source: referral; value: high; urgency: yes; area: in_area; reachable: yes</td><td>Call / personal reply today</td><td>no</td><td class="dd">scored</td><td>2026-06-05T17:42Z</td><td class="note">SYNTHETIC DEMO DATA - safe to delete</td></tr>
+            <tr><td class="rn">3</td><td>REQ-SCORE-002</td><td>2026-06-05T09:10:00Z</td><td>Patio and retaining wall installation</td><td>Referral</td><td>CLI-S-2</td><td>Daniel Brooks</td><td class="num">78</td><td class="t hot">hot</td><td>Source: referral (30 pts); Job value: high (installation, patio, retaining wall); In service area (Round Rock)</td><td>source: referral; value: high; urgency: no; area: in_area; reachable: yes</td><td>Call / personal reply today</td><td>no</td><td class="dd">scored</td><td>2026-06-05T17:42Z</td><td class="note">SYNTHETIC DEMO DATA - safe to delete</td></tr>
+            <tr><td class="rn">4</td><td>REQ-SCORE-003</td><td>2026-06-05T09:20:00Z</td><td>Monthly lawn maintenance for our property</td><td>Website</td><td>CLI-S-3</td><td>Priya Shah</td><td class="num">58</td><td class="t warm">warm</td><td>Source: website (22 pts); Job value: medium (maintenance, monthly); In service area (Pflugerville)</td><td>source: website; value: medium; urgency: no; area: in_area; reachable: yes</td><td>Personal follow-up within the day</td><td>no</td><td class="dd">scored</td><td>2026-06-05T17:42Z</td><td class="note">SYNTHETIC DEMO DATA - safe to delete</td></tr>
+            <tr><td class="rn">5</td><td>REQ-SCORE-004</td><td>2026-06-05T09:30:00Z</td><td>Quote for a small flower bed refresh</td><td>Website</td><td>CLI-S-4</td><td>Tom Becker</td><td class="num">48</td><td class="t cool">cool</td><td>Source: website (22 pts); Job value: low (quote, small); In service area (Cedar Park)</td><td>source: website; value: low; urgency: no; area: in_area; reachable: yes</td><td>Light-touch follow-up when capacity allows</td><td>no</td><td class="dd">scored</td><td>2026-06-05T17:42Z</td><td class="note">SYNTHETIC DEMO DATA - safe to delete</td></tr>
+            <tr><td class="rn">6</td><td>REQ-SCORE-006</td><td>2026-06-05T09:50:00Z</td><td>How much for mowing?</td><td>Facebook</td><td>CLI-S-6</td><td>Greg Stone</td><td class="num">30</td><td class="t defer">defer</td><td>Source: facebook (6 pts); Job value: medium (mowing); Outside service area (San Marcos)</td><td>source: facebook; value: medium; urgency: no; area: out_of_area; reachable: yes</td><td>Send a warm waitlist / near-capacity reply</td><td>yes</td><td class="dd">scored</td><td>2026-06-05T17:42Z</td><td class="note">SYNTHETIC DEMO DATA - safe to delete</td></tr>
+            <tr><td class="rn">7</td><td>REQ-SCORE-007</td><td>2026-06-05T10:00:00Z</td><td>Need a price</td><td>Facebook</td><td>CLI-S-7</td><td>K. Lawson</td><td class="num">12</td><td class="t defer">defer</td><td>Source: facebook (6 pts); Job value: low (price); Not reachable (no email or phone)</td><td>source: facebook; value: low; urgency: no; area: out_of_area; reachable: no</td><td>Send a warm waitlist / near-capacity reply</td><td>n/a - unreachable</td><td class="dd">scored</td><td>2026-06-05T17:42Z</td><td class="note">SYNTHETIC DEMO DATA - safe to delete</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h3 style="margin:var(--space-12) 0 var(--space-2); font-size:1.15rem">Grounded — or it doesn't go out</h3>
+    <p class="muted" style="margin:0 0 var(--space-6); font-size:.92rem; max-width:62ch">The same lead, run twice. The only thing that changes the reply is whether confirmed knowledge exists.</p>
 
     <div class="compare">
       <article class="panel before">
@@ -421,13 +502,13 @@
     <div class="section-head">
       <p class="eyebrow">What's next</p>
       <h2>Roadmap</h2>
-      <p>Our first real market-validation interview — with a business in the fencing trade — pointed at the highest-value next step.</p>
+      <p>Our first real market-validation interview — with a business in the fencing trade — flagged that these owners are <strong>capacity-constrained, not lead-starved</strong> ("lots of customers, can't take them all"; "most Facebook leads are trash"). That pointed straight at lead scoring — now built, as the Score &amp; Prioritize layer above. Here's what remains.</p>
     </div>
     <div class="road">
       <div class="step b1">
         <span class="n">1</span>
-        <h3>Lead scoring &amp; qualification <span class="badge readonly" style="vertical-align:middle"><span class="dot"></span>read-only</span></h3>
-        <p>The fencing business is <strong>capacity-constrained, not lead-starved</strong> ("lots of customers, can't take them all"; "most Facebook leads are trash"). They don't need more leads — they need to know <em>which</em> to chase fast vs. politely defer, ranked by source, job scope, urgency, and service-area fit. This is the gap between "nice tool" and "must-have."</p>
+        <h3>Real-data onboarding <span class="badge readonly" style="vertical-align:middle"><span class="dot"></span>read-only</span></h3>
+        <p>The read-only pipeline — <strong>read · score · draft</strong> — is proven on a test sandbox and labeled sample data. The next milestone is a first run against a live Jobber account, where the owner tunes the scoring weights and confirms the knowledge base with real facts.</p>
       </div>
       <div class="step b2">
         <span class="n">2</span>

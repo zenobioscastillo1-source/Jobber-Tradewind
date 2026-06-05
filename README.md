@@ -125,6 +125,7 @@ Identical input; the only thing that moved the draft from "escalate everything" 
 - **[tools/](tools/)** — the deterministic Python (Jobber reads, Sheet I/O, hygiene rules, the grounding gate, cleanup proposals, lead scoring).
 - **[knowledge/](knowledge/)** — the owner-confirmed source of truth (currently GreenLeaf *sample* data).
 - **[demo/](demo/)** — a runnable demo: `python demo/full.py` resets the Sheet and runs the whole read-only pipeline (ingest · hygiene · score · draft · propose) over synthetic GreenLeaf data. See [demo/README.md](demo/README.md).
+- **[docs/demo-walkthrough.html](docs/demo-walkthrough.html)** — an internal, step-by-step *visual* walkthrough of that demo run (each step's command, what it reads/writes, the tab it fills, and real console output). Self-contained offline page — open it in a browser.
 - Secrets (`.env`, `credentials.json`, `*_token.json`) are **gitignored and never committed**; copy `.env.example` to `.env` and supply your own.
 
 ## License

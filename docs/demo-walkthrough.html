@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tradewind — Demo Walkthrough (internal)</title>
+<meta name="description" content="Internal dev reference: the step-by-step process of the GreenLeaf demo (demo/full.py).">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d9488'/%3E%3Cpath d='M6 12h13a4 4 0 1 0-4-4M6 20h17a4 4 0 1 1-4 4M6 16h9' stroke='white' stroke-width='2.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  /* ---- Design tokens (shared with docs/visual-guide.html) ---------------- */
+  :root{
+    --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem;
+    --space-6:1.5rem; --space-8:2rem; --space-12:3rem; --space-16:4rem;
+    --radius:16px; --radius-sm:10px; --radius-pill:999px;
+
+    --bg:#eef2f6; --surface:#ffffff; --surface-2:#f1f5f9; --surface-3:#e9eef3;
+    --ink:#0f172a; --ink-2:#334155; --muted:#64748b; --border:#dbe3ec;
+
+    --primary:#0d9488; --primary-strong:#0f766e; --primary-ink:#ffffff;
+    --primary-soft:#e6f4f2;
+    --built:#15803d; --built-soft:#e8f5ec;
+    --planned:#b45309; --planned-soft:#fbf0e0;
+    --escalate:#b91c1c; --escalate-soft:#fbeaea;
+    --grounded:#15803d; --grounded-soft:#e8f5ec;
+
+    --shadow-sm:0 1px 2px rgba(15,23,42,.06);
+    --shadow:0 6px 24px -8px rgba(15,23,42,.18);
+    --shadow-lg:0 18px 48px -16px rgba(15,23,42,.28);
+
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --maxw:1080px;
+
+    /* terminal palette (fixed dark — a console reads best dark in both themes) */
+    --term-bg:#0b1220; --term-bar:#16213a; --term-border:#26344b;
+    --term-ink:#c4d0de; --term-mut:#6b7a90;
+    --term-green:#4ade80; --term-red:#f87171; --term-amber:#fbbf66; --term-cyan:#5eead4;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0b1220; --surface:#121b2b; --surface-2:#172234;
+      --surface-3:#1d2a40; --ink:#eef2f7; --ink-2:#c4d0de; --muted:#8d9cb0;
+      --border:#26344b;
+      --primary:#2dd4bf; --primary-strong:#5eead4; --primary-ink:#04201c;
+      --primary-soft:#11302c;
+      --built:#4ade80; --built-soft:#10291b;
+      --planned:#fbbf66; --planned-soft:#2e2310;
+      --escalate:#f87171; --escalate-soft:#2c1717;
+      --grounded:#4ade80; --grounded-soft:#10291b;
+      --shadow:0 6px 24px -8px rgba(0,0,0,.5);
+      --shadow-lg:0 18px 48px -16px rgba(0,0,0,.6);
+      --term-bg:#070d18; --term-bar:#101a2c;
+    }
+  }
+
+  /* ---- Base -------------------------------------------------------------- */
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important;animation:none!important} }
+  body{
+    margin:0; font-family:var(--font); color:var(--ink); background:var(--bg);
+    line-height:1.6; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+  .wrap{max-width:var(--maxw); margin-inline:auto; padding-inline:clamp(1rem,4vw,2rem)}
+  h1,h2,h3{line-height:1.15; margin:0; letter-spacing:-.02em}
+  p{margin:0}
+  a{color:var(--primary-strong); text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:var(--mono)}
+  :focus-visible{outline:3px solid var(--primary); outline-offset:2px; border-radius:6px}
+
+  .eyebrow{font-size:.78rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--primary-strong)}
+  .lede{font-size:clamp(1.05rem,2.2vw,1.2rem); color:var(--ink-2)}
+  .muted{color:var(--muted)}
+
+  /* ---- Top bar ----------------------------------------------------------- */
+  .topbar{position:sticky; top:0; z-index:10; backdrop-filter:blur(8px);
+    background:color-mix(in srgb, var(--bg) 82%, transparent); border-bottom:1px solid var(--border)}
+  .topbar .wrap{display:flex; align-items:center; gap:var(--space-4); min-height:60px}
+  .brand{display:flex; align-items:center; gap:.6rem; font-weight:800; letter-spacing:-.02em}
+  .brand svg{display:block}
+  .brand .tag{font-size:.66rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--planned); background:var(--planned-soft); padding:.15rem .45rem; border-radius:var(--radius-pill)}
+  .navlinks{margin-left:auto; display:flex; gap:.25rem; flex-wrap:wrap}
+  .navlinks a{font-size:.82rem; font-weight:600; color:var(--ink-2); padding:.4rem .6rem; border-radius:var(--radius-pill)}
+  .navlinks a:hover{background:var(--surface-2); text-decoration:none}
+  @media (max-width:820px){ .navlinks{display:none} }
+
+  /* ---- Hero -------------------------------------------------------------- */
+  .hero{position:relative; overflow:hidden; color:#fff;
+    background:linear-gradient(135deg,#0f766e 0%, #0d9488 45%, #0e7490 100%)}
+  .hero::after{content:""; position:absolute; inset:0; opacity:.18; pointer-events:none;
+    background:radial-gradient(900px 360px at 78% -10%, #fff, transparent 60%)}
+  .hero .wrap{position:relative; padding-block:clamp(2.2rem,6vw,4rem)}
+  .hero .eyebrow{color:#c8f3ec}
+  .hero h1{font-size:clamp(1.8rem,5vw,3rem); font-weight:800; margin:.6rem 0 0; max-width:20ch}
+  .hero .lede{color:#e6fffb; margin-top:1rem; max-width:64ch; font-size:clamp(1.02rem,2.2vw,1.25rem)}
+  .hero .chips{display:flex; gap:.5rem; flex-wrap:wrap; margin-top:1.4rem}
+  .hero-chip{display:inline-flex; align-items:center; gap:.45rem; font-size:.85rem; font-weight:600;
+    color:#063;background:rgba(255,255,255,.92); padding:.45rem .8rem; border-radius:var(--radius-pill)}
+  .hero-chip svg{width:16px;height:16px}
+
+  /* ---- Sections ---------------------------------------------------------- */
+  section{padding-block:clamp(2.2rem,5vw,3.6rem)}
+  .section-head{max-width:66ch; margin-bottom:var(--space-8)}
+  .section-head h2{font-size:clamp(1.4rem,3.2vw,2rem); font-weight:800; margin-top:.4rem}
+  .section-head p{margin-top:.6rem; font-size:1.02rem; color:var(--ink-2)}
+  .alt{background:var(--surface-2)}
+
+  /* ---- Cards / badges ---------------------------------------------------- */
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:var(--space-6); box-shadow:var(--shadow-sm)}
+  .grid{display:grid; gap:var(--space-4)}
+  .cols-2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .badge{display:inline-flex; align-items:center; gap:.4rem; font-size:.72rem; font-weight:700;
+    padding:.26rem .58rem; border-radius:var(--radius-pill); letter-spacing:.02em; white-space:nowrap}
+  .badge .dot{width:7px;height:7px;border-radius:50%}
+  .badge.built{color:var(--built); background:var(--built-soft)} .badge.built .dot{background:var(--built)}
+  .badge.readonly{color:var(--primary-strong); background:var(--primary-soft)} .badge.readonly .dot{background:var(--primary)}
+  .note{display:flex;gap:.6rem;align-items:flex-start; background:var(--planned-soft); color:var(--planned);
+    border:1px solid color-mix(in srgb,var(--planned) 30%, transparent); border-radius:var(--radius-sm);
+    padding:.8rem 1rem; font-size:.9rem; font-weight:600}
+  .note svg{flex:0 0 auto; margin-top:.1rem}
+  .note.ok{background:var(--grounded-soft); color:var(--grounded); border-color:color-mix(in srgb,var(--grounded) 30%, transparent)}
+
+  /* ---- Run card (prereqs + the one command) ------------------------------ */
+  .runcard{display:grid; gap:var(--space-6); grid-template-columns:1.1fr .9fr}
+  @media (max-width:820px){ .runcard{grid-template-columns:1fr} }
+  .bigcmd{font-family:var(--mono); font-size:clamp(1rem,2.4vw,1.3rem); font-weight:700; color:var(--ink);
+    background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm);
+    padding:var(--space-4) var(--space-6); display:flex; align-items:center; gap:.6rem}
+  .bigcmd .dollar{color:var(--primary-strong); font-weight:800}
+  .prereq{font-size:.9rem; color:var(--ink-2); display:flex; flex-direction:column; gap:.5rem}
+  .prereq .li{display:flex; gap:.55rem; align-items:flex-start}
+  .prereq .li svg{flex:0 0 auto; margin-top:.18rem; color:var(--primary-strong)}
+
+  /* ---- Step sequence ----------------------------------------------------- */
+  .steps{display:flex; flex-direction:column; gap:0}
+  .stepcard{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    box-shadow:var(--shadow-sm); overflow:hidden}
+  .stepcard .sh{display:flex; align-items:center; gap:var(--space-4); padding:var(--space-4) var(--space-6);
+    border-bottom:1px solid var(--border); background:var(--surface-2)}
+  .stepcard .num{flex:0 0 auto; width:2.5rem; height:2.5rem; border-radius:12px; display:grid; place-items:center;
+    font-weight:800; font-size:1.05rem; background:var(--primary); color:var(--primary-ink)}
+  .stepcard .sh .ttl h3{font-size:1.12rem}
+  .stepcard .sh .ttl .reuse{font-size:.76rem; color:var(--muted); font-family:var(--mono); margin-top:.2rem; display:block}
+  .stepcard .writes{margin-left:auto; display:flex; gap:.35rem; flex-wrap:wrap; justify-content:flex-end; max-width:46%}
+  .twrite{font-family:var(--mono); font-size:.7rem; font-weight:700; padding:.24rem .55rem; border-radius:var(--radius-pill);
+    background:var(--primary-soft); color:var(--primary-strong); white-space:nowrap}
+  .twrite.all{background:var(--surface-3); color:var(--muted)}
+  .stepcard .body{display:grid; grid-template-columns:1fr 1fr; gap:var(--space-6); padding:var(--space-6)}
+  @media (max-width:880px){ .stepcard .body{grid-template-columns:1fr} }
+  .what p{font-size:.92rem; color:var(--ink-2)} .what p + p{margin-top:.55rem}
+  .io{margin-top:var(--space-4); display:flex; flex-direction:column; gap:.35rem}
+  .io .r{display:flex; gap:.6rem; font-size:.84rem; align-items:baseline}
+  .io .lbl{font-family:var(--mono); font-weight:800; color:var(--muted); flex:0 0 4.4rem;
+    text-transform:uppercase; font-size:.66rem; letter-spacing:.06em}
+  .io .val{color:var(--ink-2)}
+  .io .val code{background:var(--surface-3); border-radius:5px; padding:.05rem .35rem; font-size:.8rem}
+
+  .conn{align-self:center; height:24px; width:2px; background:var(--border)}
+
+  /* ---- Terminal ---------------------------------------------------------- */
+  .term{border-radius:var(--radius-sm); border:1px solid var(--term-border); overflow:hidden; background:var(--term-bg)}
+  .term .tbar{display:flex; align-items:center; gap:.45rem; padding:.5rem .75rem; background:var(--term-bar);
+    border-bottom:1px solid var(--term-border)}
+  .term .tbar .d{width:10px;height:10px;border-radius:50%}
+  .term .tbar .d.r{background:#ff5f56} .term .tbar .d.y{background:#ffbd2e} .term .tbar .d.g{background:#27c93f}
+  .term .tbar .cmdline{margin-left:.5rem; font-family:var(--mono); font-size:.72rem; color:var(--term-mut)}
+  .term pre{margin:0; padding:var(--space-4); font-family:var(--mono); font-size:.72rem; line-height:1.55;
+    color:var(--term-ink); overflow-x:auto; white-space:pre}
+  .term b{color:#fff; font-weight:700}
+  .term .g{color:var(--term-green)} .term .red{color:var(--term-red)}
+  .term .am{color:var(--term-amber)} .term .cy{color:var(--term-cyan)} .term .mut{color:var(--term-mut)}
+
+  /* ---- Verify counts ----------------------------------------------------- */
+  .counts{display:grid; gap:var(--space-3); grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+  .countcard{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm);
+    padding:var(--space-4); box-shadow:var(--shadow-sm); text-align:center}
+  .countcard .n{font-family:var(--mono); font-size:1.8rem; font-weight:800; color:var(--primary-strong)}
+  .countcard .lbl{font-size:.82rem; color:var(--ink-2); margin-top:.2rem; font-weight:600}
+
+  /* ---- Data tables ------------------------------------------------------- */
+  .dgrid{display:grid; gap:var(--space-6); grid-template-columns:1fr 1fr}
+  @media (max-width:880px){ .dgrid{grid-template-columns:1fr} }
+  table.data{border-collapse:collapse; width:100%; font-size:.78rem}
+  table.data caption{text-align:left; font-weight:800; font-size:.95rem; margin-bottom:.5rem; color:var(--ink)}
+  table.data th,table.data td{border:1px solid var(--border); padding:.34rem .55rem; text-align:left; vertical-align:top}
+  table.data thead th{background:var(--surface-3); color:var(--muted); font-family:var(--mono); font-size:.68rem; font-weight:700}
+  table.data td.id{font-family:var(--mono); font-size:.72rem; color:var(--muted); white-space:nowrap}
+  .pill{font-family:var(--mono); font-size:.66rem; font-weight:800; padding:.12rem .45rem; border-radius:var(--radius-pill); white-space:nowrap}
+  .pill.strong{color:var(--escalate); background:var(--escalate-soft)}
+  .pill.possible{color:var(--planned); background:var(--planned-soft)}
+  .pill.incomplete{color:var(--primary-strong); background:var(--primary-soft)}
+  .pill.clean{color:var(--muted); background:var(--surface-3)}
+  .pill.hot{color:var(--escalate); background:var(--escalate-soft)}
+  .pill.warm{color:var(--planned); background:var(--planned-soft)}
+  .pill.cool{color:var(--primary-strong); background:var(--primary-soft)}
+  .pill.defer{color:var(--muted); background:var(--surface-3)}
+
+  footer{border-top:1px solid var(--border); background:var(--surface)}
+  footer .wrap{padding-block:var(--space-8); display:flex; flex-wrap:wrap; gap:var(--space-4); justify-content:space-between; align-items:center}
+  footer .links{display:flex; gap:var(--space-4); flex-wrap:wrap; font-size:.9rem}
+  .lock{display:inline-flex; align-items:center; gap:.4rem; font-size:.8rem; font-weight:700; color:var(--muted)}
+  .stack-sm > * + *{margin-top:var(--space-2)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <span class="brand">
+      <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0d9488"/><path d="M6 12h13a4 4 0 1 0-4-4M6 20h17a4 4 0 1 1-4 4M6 16h9" stroke="white" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>
+      Tradewind <span class="tag">internal</span>
+    </span>
+    <nav class="navlinks" aria-label="Sections">
+      <a href="#run">Run it</a>
+      <a href="#step1">1 · Reset</a>
+      <a href="#step2">2 · Ingest</a>
+      <a href="#step3">3 · Score</a>
+      <a href="#step4">4 · Drafts</a>
+      <a href="#step5">5 · Proposal</a>
+      <a href="#verify">Verify</a>
+      <a href="#data">Data</a>
+    </nav>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Personal · dev reference</p>
+    <h1>Demo walkthrough — one command, five steps</h1>
+    <p class="lede"><code>python demo/full.py</code> runs the whole read-only pipeline against the synthetic <strong>GreenLeaf Landscaping</strong> account and fills all five Sheet tabs. This page is the mechanics of each step — what runs, what it reads, what it writes — for my own reference while demoing or debugging.</p>
+    <div class="chips">
+      <span class="hero-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> Read-only · no Jobber writes</span>
+      <span class="hero-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Writes to the real Sheet</span>
+      <span class="hero-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0zM3 12h18"/></svg> Synthetic data · safe to re-run</span>
+    </div>
+  </div>
+</header>
+
+<!-- RUN IT -->
+<section id="run">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Before you run</p>
+      <h2>One command</h2>
+      <p>Everything below happens in sequence from this single command. Re-running is safe — Step 1 wipes the tabs first, so every run is a clean slate.</p>
+    </div>
+
+    <p class="note"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg> <span><strong>This page is for me, not the boss.</strong> The client-facing pitch is <a href="visual-guide.html">visual-guide.html</a>. This one is the working mechanics, and it does write rows to the live Google Sheet (all tagged <code>SYNTHETIC DEMO DATA - safe to delete</code>).</span></p>
+
+    <div class="card runcard" style="margin-top:var(--space-6)">
+      <div class="stack-sm">
+        <div class="bigcmd"><span class="dollar">$</span> python demo/full.py</div>
+        <p class="muted" style="font-size:.86rem; margin-top:.4rem">Reuses the real <code>tools/</code> code throughout — detection, scoring, the grounding gate, the idempotent Sheet upsert. Nothing here re-implements that logic. A ~2&nbsp;s pause between writes keeps it under the Sheets ~60-req/min quota (with 429 back-off as a safety net).</p>
+      </div>
+      <div class="prereq">
+        <div class="li"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><code>pip install -r requirements.txt</code></span></div>
+        <div class="li"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><code>credentials.json</code> + <code>token.json</code> in repo root (Sheets scope only)</span></div>
+        <div class="li"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><code>.env</code> with <code>SPREADSHEET_ID</code> set</span></div>
+        <div class="li"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Full reference: <a href="../demo/README.md">demo/README.md</a></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STEPS -->
+<section id="steps" class="alt">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">The pipeline, step by step</p>
+      <h2>What happens, in order</h2>
+      <p>Each card: what the step does mechanically, what it reads &amp; writes, which tab it fills, and the exact console output from a real run.</p>
+    </div>
+
+    <div class="steps">
+
+      <!-- STEP 1 -->
+      <article class="stepcard" id="step1">
+        <div class="sh">
+          <span class="num">1</span>
+          <span class="ttl"><h3>Reset all demo tabs</h3><span class="reuse">reset.reset_all(svc, sid)</span></span>
+          <span class="writes"><span class="twrite all">clears all 5 tabs</span></span>
+        </div>
+        <div class="body">
+          <div class="what">
+            <p>Clears every data row (row 2 onward) from the five demo tabs and <strong>keeps the header row</strong>, so the run starts from a clean slate. Tab names resolve from <code>sheet_schema.TARGETS</code> (env-aware), so they never drift.</p>
+            <p>Deliberately leaves the <code>_state</code> tab alone — that holds the durable last-seen cursor; wiping it would make Layer 1 re-process or skip Requests.</p>
+            <div class="io">
+              <div class="r"><span class="lbl">reads</span><span class="val">each tab's current rows (for the count)</span></div>
+              <div class="r"><span class="lbl">writes</span><span class="val"><code>values().clear()</code> on <code>A2:Z</code> — reversible</span></div>
+            </div>
+          </div>
+          <div class="term">
+            <div class="tbar"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="cmdline">demo/full.py — step 1</span></div>
+<pre><span class="mut">========== STEP 1: reset all demo tabs ==========</span>
+  - 'Requests': cleared <b>7</b> data row(s), header kept
+  - 'Client Hygiene': cleared <b>5</b> data row(s), header kept
+  - 'Prioritized Leads': cleared <b>8</b> data row(s), header kept
+  - 'Follow-up Drafts': cleared <b>4</b> data row(s), header kept
+  - 'Cleanup Proposals': cleared <b>1</b> data row(s), header kept</pre>
+          </div>
+        </div>
+      </article>
+
+      <div class="conn"></div>
+
+      <!-- STEP 2 -->
+      <article class="stepcard" id="step2">
+        <div class="sh">
+          <span class="num">2</span>
+          <span class="ttl"><h3>Layer 1 ingest + hygiene detection</h3><span class="reuse">simulation.run_pass(…) → hygiene_rules · find_duplicate_clients</span></span>
+          <span class="writes"><span class="twrite">Requests</span><span class="twrite">Client Hygiene</span></span>
+        </div>
+        <div class="body">
+          <div class="what">
+            <p>Walks the 7 GreenLeaf Requests. For each, it reads the linked client and runs the <strong>real</strong> rules: <code>completeness()</code> for missing fields and <code>find_duplicates()</code> for duplicate signals (the live Jobber search is stubbed to the fixture account).</p>
+            <p>Every Request gets a <strong>Requests</strong> row; any flagged client also gets a <strong>Client Hygiene</strong> row. Finds: one <span class="pill strong">strong</span> dup (shared phone), one <span class="pill possible">possible</span> dup (same name+address), one <span class="pill incomplete">incomplete</span>.</p>
+            <div class="io">
+              <div class="r"><span class="lbl">reads</span><span class="val">7 Requests + linked clients (fixture)</span></div>
+              <div class="r"><span class="lbl">writes</span><span class="val">7 Requests rows · 5 Client Hygiene rows</span></div>
+            </div>
+          </div>
+          <div class="term">
+            <div class="tbar"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="cmdline">demo/full.py — step 2</span></div>
+<pre><span class="mut">========== STEP 2: Layer 1 ingest + hygiene detection ==========</span>
+  REQ-DEMO-001 Maria Gonzalez     dup=<span class="mut">none</span>     incomplete=no  | req:<span class="g">APPENDED</span>  hyg:-
+  REQ-DEMO-002 Cedar Ridge Prop.  dup=<span class="mut">none</span>     incomplete=no  | req:<span class="g">APPENDED</span>  hyg:-
+  REQ-DEMO-003 John Smith         dup=<span class="red">strong</span>   incomplete=no  | req:<span class="g">APPENDED</span>  hyg:<span class="g">APPENDED</span>
+  REQ-DEMO-004 J. Smith           dup=<span class="red">strong</span>   incomplete=no  | req:<span class="g">APPENDED</span>  hyg:<span class="g">APPENDED</span>
+  REQ-DEMO-005 Linda Park         dup=<span class="am">possible</span> incomplete=no  | req:<span class="g">APPENDED</span>  hyg:<span class="g">APPENDED</span>
+  REQ-DEMO-006 Linda Park         dup=<span class="am">possible</span> incomplete=no  | req:<span class="g">APPENDED</span>  hyg:<span class="g">APPENDED</span>
+  REQ-DEMO-007 Carlos Rivera      dup=<span class="mut">none</span>     incomplete=<span class="cy">yes</span> | req:<span class="g">APPENDED</span>  hyg:<span class="g">APPENDED</span></pre>
+          </div>
+        </div>
+      </article>
+
+      <div class="conn"></div>
+
+      <!-- STEP 3 -->
+      <article class="stepcard" id="step3">
+        <div class="sh">
+          <span class="num">3</span>
+          <span class="ttl"><h3>Score + prioritize leads</h3><span class="reuse">scoring_rules.score_lead(req, client)</span></span>
+          <span class="writes"><span class="twrite">Prioritized Leads</span></span>
+        </div>
+        <div class="body">
+          <div class="what">
+            <p>Scores 8 inbound leads 0–100 from five signals — source, job value, urgency, service-area fit, reachability — then sorts highest-first and writes one ranked row per lead. The suggested tier is <span class="pill hot">hot</span> ≥75 · <span class="pill warm">warm</span> ≥55 · <span class="pill cool">cool</span> ≥35 · else <span class="pill defer">defer</span>.</p>
+            <p>Scoring is <strong>internal triage</strong> — it never leaves the Sheet, so it does not go through the grounding gate.</p>
+            <div class="io">
+              <div class="r"><span class="lbl">reads</span><span class="val">8 scoring leads (fixture)</span></div>
+              <div class="r"><span class="lbl">writes</span><span class="val">8 Prioritized Leads rows, ranked</span></div>
+            </div>
+          </div>
+          <div class="term">
+            <div class="tbar"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="cmdline">demo/full.py — step 3</span></div>
+<pre><span class="mut">========== STEP 3: score + prioritize leads ==========</span>
+  REQ-SCORE-001  score=<b> 98</b>  <span class="red">hot</span>    Maria Gonzalez   | leads:<span class="g">APPENDED</span>
+  REQ-SCORE-002  score=<b> 78</b>  <span class="red">hot</span>    Daniel Brooks    | leads:<span class="g">APPENDED</span>
+  REQ-SCORE-003  score=<b> 58</b>  <span class="am">warm</span>   Priya Shah       | leads:<span class="g">APPENDED</span>
+  REQ-SCORE-004  score=<b> 48</b>  <span class="cy">cool</span>   Tom Becker       | leads:<span class="g">APPENDED</span>
+  REQ-SCORE-005  score=<b> 40</b>  <span class="cy">cool</span>   Karen White      | leads:<span class="g">APPENDED</span>
+  REQ-SCORE-006  score=<b> 30</b>  <span class="mut">defer</span>  Greg Stone       | leads:<span class="g">APPENDED</span>
+  REQ-SCORE-008  score=<b> 30</b>  <span class="mut">defer</span>  Bianca Reyes     | leads:<span class="g">APPENDED</span>
+  REQ-SCORE-007  score=<b> 12</b>  <span class="mut">defer</span>  K. Lawson        | leads:<span class="g">APPENDED</span></pre>
+          </div>
+        </div>
+      </article>
+
+      <div class="conn"></div>
+
+      <!-- STEP 4 -->
+      <article class="stepcard" id="step4">
+        <div class="sh">
+          <span class="num">4</span>
+          <span class="ttl"><h3>Generate follow-up drafts</h3><span class="reuse">hot_draft(req) · scoring.deferral_draft(req) → check_draft_grounding.py</span></span>
+          <span class="writes"><span class="twrite">Follow-up Drafts</span></span>
+        </div>
+        <div class="body">
+          <div class="what">
+            <p>Drafts only where it makes sense: <strong>hot</strong> → a personalized reply; <strong>defer + reachable</strong> → a warm waitlist note. Warm/cool are skipped; a defer lead with no contact info can't be reached, so it's skipped too.</p>
+            <p>Every draft passes through the <strong>real grounding gate</strong>. Claims are limited to what's confirmed (free estimate → <code>pricing.md</code>; tone → <code>voice.md</code>), so each lands <code>status=drafted</code> — never an invented price or promise.</p>
+            <div class="io">
+              <div class="r"><span class="lbl">reads</span><span class="val">ranked leads + <code>knowledge/</code></span></div>
+              <div class="r"><span class="lbl">writes</span><span class="val">4 Follow-up Drafts rows (2 hot · 2 waitlist)</span></div>
+            </div>
+          </div>
+          <div class="term">
+            <div class="tbar"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="cmdline">demo/full.py — step 4</span></div>
+<pre><span class="mut">========== STEP 4: generate follow-up drafts ==========</span>
+  <span class="mut">(hot -&gt; personalized; defer+reachable -&gt; waitlist; both pass the gate)</span>
+  REQ-SCORE-001  <span class="red">hot</span>    Maria Gonzalez    personalized reply     draft:<span class="g">APPENDED</span>
+  REQ-SCORE-002  <span class="red">hot</span>    Daniel Brooks     personalized reply     draft:<span class="g">APPENDED</span>
+  REQ-SCORE-003  <span class="am">warm</span>   Priya Shah        no draft (warm/cool)   draft:-
+  REQ-SCORE-004  <span class="cy">cool</span>   Tom Becker        no draft (warm/cool)   draft:-
+  REQ-SCORE-005  <span class="cy">cool</span>   Karen White       no draft (warm/cool)   draft:-
+  REQ-SCORE-006  <span class="mut">defer</span>  Greg Stone        warm waitlist          draft:<span class="g">APPENDED</span>
+  REQ-SCORE-008  <span class="mut">defer</span>  Bianca Reyes      warm waitlist          draft:<span class="g">APPENDED</span>
+  REQ-SCORE-007  <span class="mut">defer</span>  K. Lawson         no draft (unreachable) draft:-</pre>
+          </div>
+        </div>
+      </article>
+
+      <div class="conn"></div>
+
+      <!-- STEP 5 -->
+      <article class="stepcard" id="step5">
+        <div class="sh">
+          <span class="num">5</span>
+          <span class="ttl"><h3>Cleanup proposal for the strong duplicate</h3><span class="reuse">find_duplicate_clients.find_duplicates → propose_cleanup.propose</span></span>
+          <span class="writes"><span class="twrite">Cleanup Proposals</span></span>
+        </div>
+        <div class="body">
+          <div class="what">
+            <p>Finds the strong-duplicate pair (John Smith / J. Smith, shared phone) and builds a <strong>high-confidence-only</strong> <code>merge_duplicates</code> proposal: keep the most complete record as primary, carry over the sibling's <em>real</em> values (here, the second email). Nothing is invented; nothing is executed — the merge itself is Layer 3.</p>
+            <div class="io">
+              <div class="r"><span class="lbl">reads</span><span class="val">fixture account (duplicate signals)</span></div>
+              <div class="r"><span class="lbl">writes</span><span class="val">1 Cleanup Proposals row (<code>confidence: strong</code>)</span></div>
+            </div>
+          </div>
+          <div class="term">
+            <div class="tbar"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="cmdline">demo/full.py — step 5</span></div>
+<pre><span class="mut">========== STEP 5: cleanup proposal for the strong duplicate ==========</span>
+  subject CLI-DEMO-C1 (John Smith): <span class="cy">merge_proposal</span> -&gt; merge:CLI-DEMO-C1+CLI-DEMO-C2
+    change: Merge CLI-DEMO-C2 into CLI-DEMO-C1 (John Smith); carry
+            over: add email jsmith.work@example.com (from CLI-DEMO-C2).
+            Then archive the merged duplicate record(s).
+    proposals: <span class="g">APPENDED</span></pre>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- VERIFY -->
+<section id="verify">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Self-check</p>
+      <h2>Verify — rows in each tab</h2>
+      <p>The run finishes by reading every tab back and printing the counts, so a clean run is obvious at a glance.</p>
+    </div>
+    <div class="counts">
+      <div class="countcard"><div class="n">7</div><div class="lbl">Requests</div></div>
+      <div class="countcard"><div class="n">5</div><div class="lbl">Client Hygiene</div></div>
+      <div class="countcard"><div class="n">8</div><div class="lbl">Prioritized Leads</div></div>
+      <div class="countcard"><div class="n">4</div><div class="lbl">Follow-up Drafts</div></div>
+      <div class="countcard"><div class="n">1</div><div class="lbl">Cleanup Proposals</div></div>
+    </div>
+    <p class="note ok" style="margin-top:var(--space-6)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> <span>Re-running is idempotent: keys dedup on a second pass, so a re-run without the reset would print <code>SKIPPED</code> instead of <code>APPENDED</code>. Step 1's reset is what guarantees a fresh <code>APPENDED</code> every time.</span></p>
+  </div>
+</section>
+
+<!-- DATA -->
+<section id="data" class="alt">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">The synthetic account</p>
+      <h2>GreenLeaf data at a glance</h2>
+      <p>Two fixture sets feed the pipeline — the hygiene clients (Step 2 &amp; 5) and the scoring leads (Step 3 &amp; 4). Handy when narrating which row is which.</p>
+    </div>
+    <div class="dgrid">
+      <div class="card">
+        <table class="data">
+          <caption>Hygiene fixture — <code>demo/simulation.py</code> (7 Requests)</caption>
+          <thead><tr><th>Client</th><th>Lead</th><th>Flag</th></tr></thead>
+          <tbody>
+            <tr><td>Maria Gonzalez</td><td>Spring garden install</td><td><span class="pill clean">clean</span></td></tr>
+            <tr><td>Cedar Ridge Prop. Mgmt</td><td>Quarterly grounds maint.</td><td><span class="pill clean">clean</span></td></tr>
+            <tr><td>John Smith</td><td>Irrigation install</td><td><span class="pill strong">strong dup</span></td></tr>
+            <tr><td>J. Smith</td><td>Sprinkler follow-up</td><td><span class="pill strong">strong dup</span></td></tr>
+            <tr><td>Linda Park</td><td>Landscape design</td><td><span class="pill possible">possible dup</span></td></tr>
+            <tr><td>Linda Park</td><td>Hedge + fall cleanup</td><td><span class="pill possible">possible dup</span></td></tr>
+            <tr><td>Carlos Rivera</td><td>Storm cleanup</td><td><span class="pill incomplete">incomplete</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <table class="data">
+          <caption>Scoring fixture — <code>demo/scoring.py</code> (8 leads)</caption>
+          <thead><tr><th>Lead</th><th>Score</th><th>Tier</th><th>Draft</th></tr></thead>
+          <tbody>
+            <tr><td>Maria Gonzalez</td><td class="id">98</td><td><span class="pill hot">hot</span></td><td>personalized</td></tr>
+            <tr><td>Daniel Brooks</td><td class="id">78</td><td><span class="pill hot">hot</span></td><td>personalized</td></tr>
+            <tr><td>Priya Shah</td><td class="id">58</td><td><span class="pill warm">warm</span></td><td>—</td></tr>
+            <tr><td>Tom Becker</td><td class="id">48</td><td><span class="pill cool">cool</span></td><td>—</td></tr>
+            <tr><td>Karen White</td><td class="id">40</td><td><span class="pill cool">cool</span></td><td>—</td></tr>
+            <tr><td>Greg Stone</td><td class="id">30</td><td><span class="pill defer">defer</span></td><td>waitlist</td></tr>
+            <tr><td>Bianca Reyes</td><td class="id">30</td><td><span class="pill defer">defer</span></td><td>waitlist</td></tr>
+            <tr><td>K. Lawson</td><td class="id">12</td><td><span class="pill defer">defer</span></td><td>— (unreachable)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <p class="note" style="margin-top:var(--space-6)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg> <span><strong>Known limitation to watch when narrating.</strong> Daniel Brooks (#2, <span class="pill hot">hot</span>) is a patio + retaining-wall job — which <code>knowledge/services.md</code> lists as <em>not offered</em> (hardscaping). The scorer measures value/fit, not <em>can-we-do-it</em>, so it still ranks hot. Its hot draft is kept claim-light (no promise to do the work). See the edge-case note in <a href="../workflows/score_and_prioritize.md">score_and_prioritize.md</a>.</span></p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span class="lock"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> Internal dev reference — Nerumi IP. Not the client-facing guide.</span>
+    <nav class="links" aria-label="Repository">
+      <a href="../demo/README.md">demo/README.md</a>
+      <a href="../demo/full.py">demo/full.py</a>
+      <a href="../workflows/score_and_prioritize.md">Scoring workflow</a>
+      <a href="visual-guide.html">Client-facing guide</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

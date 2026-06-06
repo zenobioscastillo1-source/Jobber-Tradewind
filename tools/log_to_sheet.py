@@ -68,10 +68,10 @@ def main() -> None:
     ensure_tab(svc, sid, tab)
     ensure_header(svc, sid, tab, columns)
 
-    # Optional: apply the owner's approve/edit/reject dropdown to this tab's status column.
-    dropdown = cfg.get("dropdown")
-    if dropdown and dropdown["column"] in columns:
-        ensure_dropdown(svc, sid, tab, columns.index(dropdown["column"]), dropdown["values"])
+    # Optional: apply each owner-facing data-validation dropdown (e.g. status, priority tier).
+    for dd in cfg.get("dropdowns", []):
+        if dd["column"] in columns:
+            ensure_dropdown(svc, sid, tab, columns.index(dd["column"]), dd["values"])
 
     row_num, status = find_row_by_key(svc, sid, tab, key_val, status_idx)
     values = [str(payload.get(c, "")) for c in columns]

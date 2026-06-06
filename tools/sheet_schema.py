@@ -108,8 +108,9 @@ SCORING_COLUMNS = [
 ]
 
 # Per-target Sheet config. The tab name itself is resolved at runtime from .env.
-# Optional "dropdown" applies a data-validation list to the named column so the owner gets a
-# guided approve/edit/reject choice (showCustomUi, non-strict — system values pass without a warning).
+# Optional "dropdowns" is a list of data-validation lists, each pinned to a named column, so the
+# owner picks from a chip instead of typing (showCustomUi, non-strict — system values pass without
+# a warning). A tab may carry several (e.g. an owner status AND a priority tier).
 TARGETS = {
     "requests": {
         "columns": REQUESTS_COLUMNS,
@@ -132,8 +133,8 @@ TARGETS = {
         "tab_env": "DRAFTS_TAB",
         "tab_default": "Follow-up Drafts",
         "system_statuses": {"", "drafted", "needs_owner_input"},
-        "dropdown": {"column": "status",
-                     "values": ["approved", "edit", "rejected", "drafted", "needs_owner_input"]},
+        "dropdowns": [{"column": "status",
+                       "values": ["approved", "edit", "rejected", "drafted", "needs_owner_input"]}],
     },
     "proposals": {
         "columns": PROPOSALS_COLUMNS,
@@ -141,8 +142,8 @@ TARGETS = {
         "tab_env": "PROPOSALS_TAB",
         "tab_default": "Cleanup Proposals",
         "system_statuses": {"", "proposed"},
-        "dropdown": {"column": "status",
-                     "values": ["approved", "edit", "rejected", "proposed"]},
+        "dropdowns": [{"column": "status",
+                       "values": ["approved", "edit", "rejected", "proposed"]}],
     },
     "scoring": {
         "columns": SCORING_COLUMNS,
@@ -150,8 +151,11 @@ TARGETS = {
         "tab_env": "SCORING_TAB",
         "tab_default": "Prioritized Leads",
         "system_statuses": {"", "scored"},
-        "dropdown": {"column": "status",
-                     "values": ["chasing", "deferred", "reviewed", "scored"]},
+        "dropdowns": [
+            # AGENT-confirmed priority tier — the owner can re-pick it from a chip (hot..defer).
+            {"column": "priority_tier", "values": ["hot", "warm", "cool", "defer"]},
+            {"column": "status", "values": ["chasing", "deferred", "reviewed", "scored"]},
+        ],
     },
 }
 

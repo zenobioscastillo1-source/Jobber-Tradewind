@@ -8,6 +8,7 @@ account, so a single command fills every tab:
   Step 3  score + prioritize rank each lead 0-100 -> hot/warm/cool/defer    [scoring_rules.score_lead]
   Step 4  follow-up drafts  hot -> personalized reply; defer -> waitlist    [check_draft_grounding gate]
   Step 5  cleanup proposal  merge proposal for the strong duplicate         [propose_cleanup.propose]
+  Step 6  beautify          apply the shared visual style to every tab       [format_sheets.format_all]
 
 Reuses the REAL tools/ code (detection, scoring, the grounding gate, the idempotent Sheet upsert)
 and the sibling demo datasets (simulation.py, scoring.py) — nothing here re-implements that logic.
@@ -38,6 +39,7 @@ import scoring as sco       # scoring dataset + waitlist draft + retry-aware She
 import find_duplicate_clients as F                                      # noqa: E402
 from scoring_rules import score_lead                                    # noqa: E402  (real scorer)
 from propose_cleanup import propose                                     # noqa: E402  (real proposer)
+from format_sheets import format_all                                    # noqa: E402  (real styler)
 from google_auth import sheets_service                                  # noqa: E402
 from sheets_io import get_spreadsheet_id, quote_tab                     # noqa: E402
 from sheet_schema import TARGETS                                        # noqa: E402
@@ -164,6 +166,13 @@ def step_5_proposal():
     print(f"    proposals: {log('proposals', proposal)}")
 
 
+def step_6_beautify(svc, sid):
+    print("\n========== STEP 6: apply the shared visual style (Jobber-Zephyr palette) ==========")
+    # Formatting only (navy header, mint banding, status chips) — reversible, no cell values change.
+    for tab, state in format_all(svc, sid).items():
+        print(f"  {'OK' if state == 'styled' else '--'}  {tab:<18} {state}")
+
+
 def verify(svc, sid):
     print("\n========== VERIFY: data rows now in each tab ==========")
     for target in reset.RESET_TARGETS:
@@ -190,6 +199,7 @@ def main():
     step_3_score(scored)
     step_4_drafts(scored)
     step_5_proposal()
+    step_6_beautify(svc, sid)
 
     verify(svc, sid)
     print("\nDone. All five tabs reflect one unified GreenLeaf Landscaping demo run.")
